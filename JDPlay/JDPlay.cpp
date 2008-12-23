@@ -18,19 +18,24 @@
 
 /****************************************************************************************************************/
 
-/*	This is a remote controlled program for launching DirectPlay games via RippleLaunch.
+/* JDPlay_rmt.cpp
+ *
+ *	This is a remote controlled program for launching DirectPlay games via RippleLaunch.
  *	It is supposed to give the functionality of the JDPLay_jni.dll with an environment like wine or cedega.
  *
- *  You will need the DirectX SDK April 2007 (latest version with all DirectPlay headers).
- *  Also you will need the Windows Platform SDK for ATL.
  */
 
 /****************************************************************************************************************/
 
-#include "DirectPlay.h"
+#include <windows.h>
+#include <dplay.h>
+#include <dplobby.h>
+#include <string>
 #include <iostream>
 #include <sstream>
 #include <conio.h>
+
+#include "DirectPlay.h"
 
 using namespace std;
 
@@ -291,8 +296,8 @@ void launch(bool doSearch){
 }
 
 void printHelp(){
-	cout << endl << "JDPlay usage:" << endl
-	     << "    jdplay.exe --playerName <NAME> --maxSearchRetries <NUMBER> [--debug]" << endl
+	cout << endl << "JDPlay_rmt usage:" << endl
+	     << "    JDPlay_rmt.exe --playerName <NAME> --maxSearchRetries <NUMBER> [--debug]" << endl
 		 << endl
 		 << "    --help          print this help and exit" << endl
 		 << "    --playerName        the name of the player" << endl
@@ -334,7 +339,7 @@ void printHelp(){
 		 << "    OUT: ACK" << endl
 		 << "    OUT: RDY" << endl
 		 << endl
-		 << "  # write DONE after each command you give, this is used as a workaround to shutdown, when JDPlay looses your process" << endl
+		 << "  # write DONE after each command you give, this is used as a workaround to shutdown, when JDPlay_rmt looses your process" << endl
 		 << endl
 		 << "  # this happens when gibberish is read" << endl
 		 << "    OUT: RDY" << endl

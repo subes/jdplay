@@ -18,23 +18,27 @@
 
 /****************************************************************************************************************/
 
-/*	This is a class to the DirectPlay RippleLaunch technology for easy use.
+/* JDPlay.cpp
+ *
+ *	JDPlay, a class to the DirectPlay RippleLaunch technology for easy use.
  *
  *	Needs to be linked to: "dplayx.lib dxguid.lib"
- *
- *  You will need the DirectX SDK April 2007 (latest version with all DirectPlay headers).
- *  Also you will need the Windows Platform SDK for ATL.
  */
 
 /****************************************************************************************************************/
 
-#include "DirectPlay.h"
 #include <iostream>
+#include <fstream>
+#include <windows.h>
 #include <windowsx.h>	//GlobalAllocPtr
 #include <time.h>
+#include <dplay.h>
+#include <dplobby.h>
+#include <comdef.h>
 #include <atlbase.h>	//STRING TO GUID
+#include <atlstr.h>
 
-using namespace std;
+#include "DirectPlay.h"
 
 JDPlay* JDPlay::instance;
 

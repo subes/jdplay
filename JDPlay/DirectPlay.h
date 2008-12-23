@@ -18,18 +18,20 @@
 
 /****************************************************************************************************************/
 
-/*	This is a class to the DirectPlay RippleLaunch technology for easy use.
+/* JDPlay.h
+ *
+ *	JDPlay, a class to the DirectPlay RippleLaunch technology for easy use.
  *
  *	Needs to be linked to: "dplayx.lib dxguid.lib"
  *
- *  You will need the DirectX SDK April 2007 (latest version with all DirectPlay headers).
- *  Also you will need the Windows Platform SDK for ATL.
+ *      You will need the DirectX SDK April 2007 (latest version with all DirectPlay headers).
+ *      Also you will need the Windows Platform SDK for ATL.
+ *
  */
 
 /****************************************************************************************************************/
 
-#include <dplay.h>
-#include <dplobby.h>
+using namespace std;
 
 BOOL FAR PASCAL EnumSessionsCallback(LPCDPSESSIONDESC2 lpThisSD, LPDWORD lpdwTimeOut, DWORD dwFlags, LPVOID lpContext);
 
@@ -37,24 +39,24 @@ class JDPlay{
 	private:
 		static JDPlay*		instance;		// needed for callback function to access a method
 
-		bool				debug;
-		int					curRetry;
-		int					maxSearchRetries;
-		bool				foundLobby;
-		bool				isInitialized;
-		bool				lpDPIsOpen;
+		bool			debug;
+		int			curRetry;
+		int			maxSearchRetries;
+		bool			foundLobby;
+		bool			isInitialized;
+		bool			lpDPIsOpen;
 
 		LPDIRECTPLAY3A		lpDP;			// directplay interface pointer
 		LPDIRECTPLAYLOBBY3A	lpDPLobby;		// lobby interface pointer
 		
-		DPNAME				dpName;			// player description
+		DPNAME			dpName;			// player description
 		DPSESSIONDESC2		dpSessionDesc;          // session description
 		DPLCONNECTION		dpConn;			// connection description
 
-		DPID				dPid;			// player ID (currently unused)
-		DWORD				appID;			// game process ID
-		DWORD				sessionFlags;   // either Host or Join Session
-		DWORD				playerFlags;    // either Host or not
+		DPID			dPid;			// player ID (currently unused)
+		DWORD			appID;			// game process ID
+		DWORD			sessionFlags;           // either Host or Join Session
+		DWORD			playerFlags;            // either Host or not
 
 	public:
 		JDPlay(char* playerName, int maxSearchRetries, bool debug);
