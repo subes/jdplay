@@ -296,7 +296,6 @@ void printHelp(){
 		 << "    --debug         print debug messages" << endl
 		 << endl
 		 << "This is a remote controlled program for launching DirectPlay games via RippleLaunch. "
-		 << "It is supposed to give the functionality of the JDPLay_jni.dll in an environment like wine or cedega." << endl
 		 << endl
 		 << "Explanation of remote control:" << endl
 		 << "  # JDPlay is started and waits for the first command" << endl
