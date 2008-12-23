@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JDPlay", "JDPlay\JDPlay.vcproj", "{519C8965-07B3-4C19-8522-BEC17BF807EF}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JDPlay_rmt", "JDPlay_rmt\JDPlay_rmt.vcproj", "{DDDCAA96-B3CE-4D05-9B3D-FD610E1387BB}"
 EndProject
 Global
@@ -11,10 +9,6 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{519C8965-07B3-4C19-8522-BEC17BF807EF}.Debug|Win32.ActiveCfg = Debug|Win32
-		{519C8965-07B3-4C19-8522-BEC17BF807EF}.Debug|Win32.Build.0 = Debug|Win32
-		{519C8965-07B3-4C19-8522-BEC17BF807EF}.Release|Win32.ActiveCfg = Release|Win32
-		{519C8965-07B3-4C19-8522-BEC17BF807EF}.Release|Win32.Build.0 = Release|Win32
 		{DDDCAA96-B3CE-4D05-9B3D-FD610E1387BB}.Debug|Win32.ActiveCfg = Debug|Win32
 		{DDDCAA96-B3CE-4D05-9B3D-FD610E1387BB}.Debug|Win32.Build.0 = Debug|Win32
 		{DDDCAA96-B3CE-4D05-9B3D-FD610E1387BB}.Release|Win32.ActiveCfg = Release|Win32
