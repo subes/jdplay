@@ -140,7 +140,7 @@ int main(int argc, char* argv[]){
 void waitForCommand(){
 	//Flush stdin
 	while(_kbhit()){
-		_getch_nolock();
+		_getch();
 	}
 	
 	//Now ready for command
@@ -148,14 +148,12 @@ void waitForCommand(){
 	fflush(stdout);
 
 	//Read the command
-	char in[256]; //should be enough
+	static char in[MAX_PATH]; //should be enough
 	gets(in);
 
 	string input(in);
 
 	if(!input.compare("DONE")){
-		cout << "ACK" << endl;
-		fflush(stdout);
 		if(doneCounter == MAX_DONECOUNTER){
 			exit(1);
 		}
@@ -261,6 +259,13 @@ void waitForCommand(){
 			fflush(stdout);
 		}
 	}
+
+	//Read DONE
+	gets(in);
+	if(strcmp(in, "DONE")){
+		cout << "You have to end each command conversation with DONE!" << endl;
+		fflush(stdout);
+	}
 }
 
 void initialize(char* gameGUID, char* hostIP, bool isHost){
@@ -302,6 +307,7 @@ void printHelp(){
 		 << "    OUT: RDY" << endl
 		 << "  # remote app wants to initialize a game" << endl
 		 << "    IN:  INITIALIZE gameGUID:{BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF} hostIP:192.168.0.3 isHost:false" << endl
+		 << "    IN:  DONE" << endl
 		 << "  # JDPlay understood the command and launches" << endl
 		 << "    OUT: ACK" << endl
 		 << "  # the initalization process takes some seconds" << endl
@@ -313,6 +319,7 @@ void printHelp(){
 		 << "    OUT: RDY" << endl
 		 << "  # remote app wants to launch the game with searching for a session" << endl
 		 << "    IN:  LAUNCH doSearch:true" << endl
+		 << "    IN:  DONE" << endl
 		 << "  # JDPlay understood the command and launches" << endl
 		 << "    OUT: ACK" << endl
 		 << "  # game has been closed" << endl
@@ -323,14 +330,11 @@ void printHelp(){
 		 << "  # there's also the possibility to change the playername after a RDY" << endl
 		 << "    OUT: RDY" << endl
 		 << "    IN:  UPDATE playerName:subes" << endl
-		 << "    OUT: ACK" << endl
-		 << "    OUT: RDY" << endl
-		 << endl
-		 << "  # write DONE after each command you give, this is used as a workaround to shutdown when JDPlay_rmt looses your process" << endl
-		 << "    OUT: RDY" << endl
 		 << "    IN:  DONE" << endl
 		 << "    OUT: ACK" << endl
 		 << "    OUT: RDY" << endl
+		 << endl
+		 << "  # write DONE after each command you give, this is used as a workaround to shutdown, when JDPlay_rmt looses your process" << endl
 		 << endl
 		 << "  # this happens when gibberish is read" << endl
 		 << "    OUT: RDY" << endl
