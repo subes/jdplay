@@ -34,7 +34,7 @@
 
 using namespace std;
 
-#define MAX_DONECOUNTER 10
+#define MAX_DONE_COUNT 10
 
 // *** Variable declarations ***
 JDPlay* jdplay;
@@ -139,8 +139,18 @@ int main(int argc, char* argv[]){
 
 void waitForCommand(){
 	//Flush stdin
+    char prev = 'a';
+    int sameCharCount = 0;
 	while(_kbhit()){
-		_getch();
+        char cur = _getch();
+        if(prev == cur){
+            sameCharCount++;
+            if(sameCharCount >= MAX_DONE_COUNT*5){
+                exit(1);
+            }
+        }else{
+            prev = cur;
+        }
 	}
 	
 	//Now ready for command
@@ -153,8 +163,8 @@ void waitForCommand(){
 
 	string input(in);
 
-	if(!input.compare("DONE")){
-		if(doneCounter == MAX_DONECOUNTER){
+	if(!input.compare("DONE") || input.length() < 1){
+		if(doneCounter == MAX_DONE_COUNT){
 			exit(1);
 		}
 		doneCounter++;
