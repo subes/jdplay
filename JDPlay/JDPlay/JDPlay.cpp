@@ -138,6 +138,8 @@ int main(int argc, char* argv[]){
 }
 
 void waitForCommand(){
+	bool waitForDone = false;
+
 	//Flush stdin
     char prev = 'a';
     int sameCharCount = 0;
@@ -164,13 +166,12 @@ void waitForCommand(){
 	string input(in);
 
 	if(!input.compare("DONE") || input.length() < 1){
-		if(doneCounter == MAX_DONE_COUNT){
-			exit(1);
-		}
 		doneCounter++;
 	}else{
-		doneCounter = 0;
 		if(!input.substr(0,11).compare("INITIALIZE ") && input.find(" gameGUID:") != string::npos && input.find(" hostIP:") != string::npos && input.find(" isHost:") != string::npos){
+			doneCounter = 0;
+			waitForDone = true;
+
 			//Initialize
 			
 			//INITIALIZE gameGUID:<e.g. {BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF}> hostIP:<e.g. 192.168.0.3> isHost:<true or false> 
@@ -222,6 +223,9 @@ void waitForCommand(){
 			initialize(gameGUID, hostIP, isHost);
 		}else
 		if(!input.substr(0,7).compare("LAUNCH ") && input.find(" doSearch:") != string::npos){
+			doneCounter = 0;
+			waitForDone = true;
+
 			//Launch game
 			string s_doSearch = input.substr(input.find(" doSearch:")+10);
 
@@ -245,6 +249,9 @@ void waitForCommand(){
 			launch(doSearch);
 		}else
 		if(!input.substr(0,7).compare("UPDATE ")){
+			doneCounter = 0;
+			waitForDone = true;
+			
 			//Set new playername
 			string s_playerName = input.substr(input.find(" playerName:")+12);
 			char playerName[256];
@@ -264,17 +271,21 @@ void waitForCommand(){
 			fflush(stdout);
 			jdplay->updatePlayerName(playerName);
 		}else{
-			//Unknown command
-			cout << "NAK" << endl;
-			fflush(stdout);
+			doneCounter++;
 		}
 	}
 
-	//Read DONE
-	gets(in);
-	if(strcmp(in, "DONE")){
-		cout << "You have to end each command conversation with DONE!" << endl;
-		fflush(stdout);
+	if(doneCounter >= MAX_DONE_COUNT){
+		exit(1);
+	}
+
+	if(waitForDone){
+		//Read DONE
+		gets(in);
+		if(strcmp(in, "DONE")){
+			cout << "You have to end each command conversation with DONE!" << endl;
+			fflush(stdout);
+		}
 	}
 }
 
@@ -349,7 +360,6 @@ void printHelp(){
 		 << "  # this happens when gibberish is read" << endl
 		 << "    OUT: RDY" << endl
 		 << "    IN:  jsdakfsdfkh" << endl
-		 << "    OUT: NAK" << endl
 		 << "    OUT: RDY" << endl
 		 << endl
 		 << "  # this indicates an error and may be printed instead of FIN" << endl
