@@ -44,15 +44,15 @@ BOOL FAR PASCAL EnumSessionsCallback(LPCDPSESSIONDESC2 lpThisSD, LPDWORD lpdwTim
 	return 0;
 }
 
-JDPlay::JDPlay(char* playerName, int maxSearchRetries, bool debug){
+JDPlay::JDPlay(char* playerName, int searchValidationCount, bool debug){
 
 	if(debug){
-		cout << "++ JDPlay(" << playerName << ", " << maxSearchRetries << "," << debug << ")" << endl;
+		cout << "++ JDPlay(" << playerName << "," << searchValidationCount << "," << debug << ")" << endl;
 		fflush(stdout);
 	}
 
 	this->instance = this;
-	this->maxSearchRetries = maxSearchRetries;
+	this->searchValidationCount = searchValidationCount;
 	this->lpDPIsOpen = false;
 	this->isInitialized = false;
 	this->debug = debug;
@@ -255,11 +255,12 @@ bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost){
 	dpSessionDesc.dwSize = sizeof(DPSESSIONDESC2);
 	dpSessionDesc.dwFlags = 0;									// optional: DPSESSION_MIGRATEHOST
 	dpSessionDesc.guidApplication = gameID;						// Game GUID
-	dpSessionDesc.guidInstance = gameID;							// ID for the session instance
-	dpSessionDesc.lpszSessionName = NULL;			// ANSI name of the session
-	dpSessionDesc.lpszSessionNameA = NULL;			// ANSI name of the session
+	dpSessionDesc.guidInstance = gameID;						// ID for the session instance
+	dpSessionDesc.lpszSessionName = NULL;						// name of the session
+	dpSessionDesc.lpszSessionNameA = NULL;						// ANSI name of the session
 	dpSessionDesc.dwMaxPlayers = 0;								// Maximum # players allowed in session
 	dpSessionDesc.dwCurrentPlayers = 0;							// Current # players in session (read only)
+	dpSessionDesc.lpszPassword = NULL;							// ANSI password of the session (optional)
 	dpSessionDesc.lpszPasswordA = NULL;							// ANSI password of the session (optional)
 	dpSessionDesc.dwReserved1 = 0;								// Reserved for future M$ use.
 	dpSessionDesc.dwReserved2 = 0;
@@ -305,6 +306,10 @@ bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost){
 	return true;
 }
 
+bool JDPlay::isHost(){
+	return sessionFlags != DPOPEN_JOIN;
+}
+
 void JDPlay::updatePlayerName(char* playerName){
 	if(debug){
 		cout << "++ updatePlayerName(" << playerName << ")" << endl;
@@ -328,74 +333,38 @@ void JDPlay::updatePlayerName(char* playerName){
 		fflush(stdout);
 	}
 }
-
-bool JDPlay::search(){
-	
+bool JDPlay::searchOnce(){
 	if(debug){
-		cout << "++ search()" << endl;
+		cout << "++ searchOnce()" << endl;
 		fflush(stdout);
 	}
 	
 	HRESULT hr;
 
-	if(sessionFlags == DPOPEN_JOIN ){
-		// join/host session ***************************************************************************
-		if(lpDP && sessionFlags == DPOPEN_JOIN){
-			if(debug){
-				cout << "search() - searching for a session .";
-				fflush(stdout);
-			}
-			
-			for(curRetry = 1; curRetry < maxSearchRetries; curRetry++){
-		
+	if(!isHost()){
+
+		foundLobby = false;
+
+		if(lpDP){
+
+			hr = lpDP->EnumSessions(&dpSessionDesc, 0, EnumSessionsCallback, NULL, 0);
+			if(hr != S_OK){
 				if(debug){
-					cout << ".";
+					cout << endl << "searchOnce() - ERROR[" << getDPERR(hr) << "]: failed to enumerate sessions" << endl;
 					fflush(stdout);
 				}
-
-				hr = lpDP->EnumSessions(&dpSessionDesc, 0, EnumSessionsCallback, NULL, 0);
-				if(hr != S_OK){
-					if(debug){
-						cout << endl << "search() - ERROR[" << getDPERR(hr) << "]: failed to enumerate sessions" << endl;
-						fflush(stdout);
-					}
-					return false;
-				}
-
-				if(foundLobby){
-					break;
-				}
-			}
-
-			if(debug){
-				if(!foundLobby){
-					cout << " FAILURE after " << curRetry << ". try!" << endl;
-					fflush(stdout);
-				}else{
-					cout << " SUCCESS at " << curRetry << ". try!" << endl;
-					fflush(stdout);
-				}
-			}
-
-			if(debug){
-				if(foundLobby){
-					cout << "search() - session found" << endl;
-					fflush(stdout);
-				}else{
-					cout << "search() - search failed" << endl;
-					fflush(stdout);
-				}
+				return false;
 			}
 
 			if(!foundLobby){
 				if(debug){
-					cout << "-- search()" << endl;
+					cout << "searchOnce() - no session found" << endl;
+					cout << "-- searchOnce()" << endl;
 					fflush(stdout);
 				}
 
 				return false;
 			}
-
 		}
 
 		if(lpDP){
@@ -403,7 +372,7 @@ bool JDPlay::search(){
 			hr = lpDP->Open(&dpSessionDesc, sessionFlags | DPOPEN_RETURNSTATUS);
 			if(hr != S_OK){
 				if(debug){
-					cout << "search() - ERROR[" << getDPERR(hr) << "]: failed to open DirectPlay session" << endl;
+					cout << "searchOnce() - ERROR[" << getDPERR(hr) << "]: failed to open DirectPlay session" << endl;
 					fflush(stdout);
 				}
 				return false;
@@ -416,26 +385,26 @@ bool JDPlay::search(){
 
 			if(hr != S_OK){
 				if(debug){
-					cout << "search() - ERROR[" << getDPERR(hr) << "]: failed to create local player" << endl;
+					cout << "searchOnce() - ERROR[" << getDPERR(hr) << "]: failed to create local player" << endl;
 					fflush(stdout);
 				}
 				return false;
 			}
 
 			if(debug){
-				cout << "search() - session opened and player initialized" << endl;
+				cout << "searchOnce() - session opened and player initialized" << endl;
 				fflush(stdout);
 			}
 		}
 	}else{
 		if(debug){
-			cout << "search() - skipping session search, not needed" << endl;
+			cout << "searchOnce() - skipping session search, not needed because hosting" << endl;
 			fflush(stdout);
 		}
 	}
 
 	if(debug){
-		cout << "-- search()" << endl;
+		cout << "-- searchOnce()" << endl;
 		fflush(stdout);
 	}
 
@@ -533,26 +502,64 @@ bool JDPlay::launch(){
 	return true;
 }
 
-void JDPlay::updateFoundSessionDescription(LPCDPSESSIONDESC2 lpFoundSD){
-	//so that dplay also joins sessions created ingame
-	dpSessionDesc.dwSize = lpFoundSD->dwSize;
-	dpSessionDesc.dwFlags = lpFoundSD->dwFlags;
-	dpSessionDesc.guidInstance = lpFoundSD->guidInstance;
-	dpSessionDesc.guidApplication = lpFoundSD->guidApplication;
-	dpSessionDesc.dwMaxPlayers = lpFoundSD->dwMaxPlayers;
-	dpSessionDesc.dwCurrentPlayers = lpFoundSD->dwCurrentPlayers;
-	dpSessionDesc.dwReserved1 = lpFoundSD->dwReserved1;
-	dpSessionDesc.dwReserved2 = lpFoundSD->dwReserved2;
-	dpSessionDesc.dwUser1 = lpFoundSD->dwUser1;
-	dpSessionDesc.dwUser2 = lpFoundSD->dwUser2;
-	dpSessionDesc.dwUser3 = lpFoundSD->dwUser3;
-	dpSessionDesc.dwUser4 = lpFoundSD->dwUser4;
-	dpSessionDesc.lpszSessionName = lpFoundSD->lpszSessionName;
-	dpSessionDesc.lpszSessionNameA = lpFoundSD->lpszSessionNameA;
-	dpSessionDesc.lpszPassword = lpFoundSD->lpszPassword;
-	dpSessionDesc.lpszPasswordA = lpFoundSD->lpszPasswordA;
+void JDPlay::updateFoundSessionDescription(LPCDPSESSIONDESC2 lpFoundSD){	
+	if(debug){
+		cout << "++ updateFoundSessionDescription(...)" << endl;
+		fflush(stdout);
+	}
+	
+	static int validateCount = -1;
+		
+	if(validateCount > -1) {
+		bool areEqual = dpSessionDesc.dwSize == lpFoundSD->dwSize
+			&&	dpSessionDesc.dwFlags == lpFoundSD->dwFlags
+			&&	dpSessionDesc.guidInstance == lpFoundSD->guidInstance
+			&&	dpSessionDesc.guidApplication == lpFoundSD->guidApplication
+			&&	dpSessionDesc.dwMaxPlayers == lpFoundSD->dwMaxPlayers
+			&&	dpSessionDesc.dwReserved1 == lpFoundSD->dwReserved1
+			&&	dpSessionDesc.dwReserved2 == lpFoundSD->dwReserved2
+			&&	dpSessionDesc.dwUser1 == lpFoundSD->dwUser1
+			&&	dpSessionDesc.dwUser2 == lpFoundSD->dwUser2
+			&&	dpSessionDesc.dwUser3 == lpFoundSD->dwUser3
+			&&	dpSessionDesc.dwUser4 == lpFoundSD->dwUser4;
 
-	foundLobby = true;
+		if(areEqual){
+			validateCount++;
+		}else{
+			validateCount = -1;
+		}
+	}else{
+		//so that dplay also joins sessions created ingame
+		dpSessionDesc.dwSize = lpFoundSD->dwSize;
+		dpSessionDesc.dwFlags = lpFoundSD->dwFlags;
+		dpSessionDesc.guidInstance = lpFoundSD->guidInstance;
+		dpSessionDesc.guidApplication = lpFoundSD->guidApplication;
+		dpSessionDesc.dwMaxPlayers = lpFoundSD->dwMaxPlayers;
+		dpSessionDesc.dwCurrentPlayers = lpFoundSD->dwCurrentPlayers;
+		dpSessionDesc.dwReserved1 = lpFoundSD->dwReserved1;
+		dpSessionDesc.dwReserved2 = lpFoundSD->dwReserved2;
+		dpSessionDesc.dwUser1 = lpFoundSD->dwUser1;
+		dpSessionDesc.dwUser2 = lpFoundSD->dwUser2;
+		dpSessionDesc.dwUser3 = lpFoundSD->dwUser3;
+		dpSessionDesc.dwUser4 = lpFoundSD->dwUser4;
+		dpSessionDesc.lpszSessionName = lpFoundSD->lpszSessionName;
+		dpSessionDesc.lpszSessionNameA = lpFoundSD->lpszSessionNameA;
+		dpSessionDesc.lpszPassword = lpFoundSD->lpszPassword;
+		dpSessionDesc.lpszPasswordA = lpFoundSD->lpszPasswordA;
+
+		validateCount = 0;
+	}	
+
+	if(validateCount >= searchValidationCount){
+		foundLobby = true;
+	}else{
+		foundLobby = false;
+	}
+
+	if(debug){
+		cout << "-- updateFoundSessionDescription(); validateCount = " << validateCount << ", foundLobby = " << foundLobby << endl;
+		fflush(stdout);
+	}
 }
 
 JDPlay* JDPlay::getInstance(){

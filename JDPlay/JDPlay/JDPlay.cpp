@@ -42,6 +42,7 @@ bool debug;
 
 //used to realize if father process dies -> detectable if we get sent "DONE" endlessly
 int doneCounter;
+int maxSearchRetries;
 
 // *** Method declarations ***
 void waitForCommand();
@@ -55,11 +56,12 @@ int main(int argc, char* argv[]){
 	debug = false;
 	doneCounter = 0;
 	char* playerName;
-	int maxSearchRetries;
+	int searchValidationCount;
 
 	//Go through arguments
 	bool playerfound = false;
 	bool retriesfound = false;
+	bool validatefound = false;
 
 	for(int i = 0; i < argc; i++){
 		if(!strcmp(argv[i], "--playerName")){
@@ -76,6 +78,31 @@ int main(int argc, char* argv[]){
 				}
 			}else{
 				cout << "ERROR: --playerName was given more than once" << endl;
+				fflush(stdout);
+				printHelp();
+				exit(1);
+			}
+		}else
+		if(!strcmp(argv[i], "--searchValidationCount")){
+			if(!validatefound){
+				if(argc > i+1){
+					validatefound = true;
+					//Convert char* to int
+					istringstream istr(argv[i+1]);
+					if(!(istr >> searchValidationCount)){
+						cout << "ERROR: the <VALUE> of --searchValidationCount is not a number" << endl;
+						fflush(stdout);
+					}
+					i++;
+				}else{
+					cout << "ERROR: --searchValidationCount was used without a <VALUE>" << endl;
+					fflush(stdout);
+					printHelp();
+					exit(1);
+				}
+			}
+			else{
+				cout << "ERROR: --searchValidationCount was given more than once" << endl;
 				fflush(stdout);
 				printHelp();
 				exit(1);
@@ -128,9 +155,15 @@ int main(int argc, char* argv[]){
 		printHelp();
 		exit(1);
 	}
+	if(!validatefound){
+		cout << "ERROR: --searchValidationCount was not given" << endl;
+		fflush(stdout);
+		printHelp();
+		exit(1);
+	}
 
 	//Init JDPlay *********************************************************
-	jdplay = new JDPlay(playerName, maxSearchRetries, debug);
+	jdplay = new JDPlay(playerName, searchValidationCount, debug);
 
 	while(true){
 		waitForCommand();
@@ -284,34 +317,51 @@ void initialize(char* gameGUID, char* hostIP, bool isHost){
 }
 
 void launch(){
-	bool ret = jdplay->search();
-	if(!ret){
-		cout << "NOTFOUND" << endl;
-		fflush(stdout);
-	}else{
-		cout << "FOUND" << endl;
-		fflush(stdout);
 
-		ret = jdplay->launch();
-		if(!ret){
-			cout << "ERR" << endl;
+	if(!jdplay->isHost()){
+		bool found = false;
+		for(int i = 1; i <= maxSearchRetries; i++){
+			
+			cout << "SEARCHTRY " << i << "/" << maxSearchRetries << endl;
 			fflush(stdout);
+			
+			found = jdplay->searchOnce();
+
+			if(found || _kbhit()){
+				break;
+			}
+		}
+
+		if(!found){
+			cout << "NOTFOUND" << endl;
+			fflush(stdout);
+			return;
 		}else{
-			cout << "FIN" << endl;
+			cout << "FOUND" << endl;
 			fflush(stdout);
 		}
+	}
+	
+	int ret = jdplay->launch();
+	if(!ret){
+		cout << "ERR" << endl;
+		fflush(stdout);
+	}else{
+		cout << "FIN" << endl;
+		fflush(stdout);
 	}
 }
 
 void printHelp(){
 	cout << endl << "JDPlay usage:" << endl
-	     << "    jdplay.exe --playerName <NAME> --maxSearchRetries <NUMBER> [--debug]" << endl
+	     << "    jdplay.exe --playerName <NAME> --maxSearchRetries <NUMBER>  --searchValidationCount <NUMBER> [--debug]" << endl
 		 << endl
-		 << "    --help          print this help and exit" << endl
-		 << "    --playerName        the name of the player" << endl
-		 << "    --maxSearchRetries  how often to retry when " << endl
-		 << "                            searching for a session" << endl
-		 << "    --debug         print debug messages" << endl
+		 << "    --help                   print this help and exit" << endl
+		 << "    --playerName             the name of the player" << endl
+		 << "    --maxSearchRetries       how often to retry when " << endl
+		 << "                               searching for a session" << endl
+		 << "    --searchValidationCount  how often to validate a found session" << endl
+		 << "    --debug                  print debug messages" << endl
 		 << endl
 		 << "This is a remote controlled program for launching DirectPlay games via RippleLaunch. "
 		 << endl
@@ -319,7 +369,7 @@ void printHelp(){
 		 << "  # JDPlay is started and waits for the first command" << endl
 		 << "    OUT: RDY" << endl
 		 << "  # remote app wants to initialize a game" << endl
-		 << "    IN:  INITIALIZE gameGUID:{BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF} hostIP:192.168.0.3 isHost:false" << endl
+		 << "    IN:  INITIALIZE gameGUID:{BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF} hostIP:192.168.2.101 isHost:false" << endl
 		 << "    IN:  DONE" << endl
 		 << "  # JDPlay understood the command and launches" << endl
 		 << "    OUT: ACK" << endl

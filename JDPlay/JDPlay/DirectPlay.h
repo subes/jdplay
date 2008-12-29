@@ -39,7 +39,7 @@ class JDPlay{
 
 		bool				debug;
 		int					curRetry;
-		int					maxSearchRetries;
+		int					searchValidationCount;
 		bool				foundLobby;
 		bool				isInitialized;
 		bool				lpDPIsOpen;
@@ -57,13 +57,14 @@ class JDPlay{
 		DWORD				playerFlags;    // either Host or not
 
 	public:
-		JDPlay(char* playerName, int maxSearchRetries, bool debug);
+		JDPlay(char* playerName, int searchValidationCount, bool debug);
 		~JDPlay();
 
 		void updatePlayerName(char* playerName);
 		bool initialize(char* gameGUID, char* hostIP, bool isHost);
-		bool search();
+		bool searchOnce();
 		bool launch();
+		bool isHost();
 		
 		void updateFoundSessionDescription(LPCDPSESSIONDESC2 lpFoundSD); //has to be public for the callback function
 		static JDPlay* getInstance(); //makes the object available to the callback function
