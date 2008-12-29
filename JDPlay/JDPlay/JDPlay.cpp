@@ -222,7 +222,7 @@ void waitForCommand(){
 			fflush(stdout);
 			initialize(gameGUID, hostIP, isHost);
 		}else
-		if(!input.substr(0,7).compare("LAUNCH ")){
+		if(!input.substr(0,6).compare("LAUNCH")){
 			doneCounter = 0;
 			waitForDone = true;
 
