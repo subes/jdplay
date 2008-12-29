@@ -329,28 +329,20 @@ void JDPlay::updatePlayerName(char* playerName){
 	}
 }
 
-bool JDPlay::launch(bool searchForSession){
-
+bool JDPlay::search(){
+	
 	if(debug){
-		cout << "++ launch(" << searchForSession << ")" << endl;
+		cout << "++ search()" << endl;
 		fflush(stdout);
 	}
-
-	if(!isInitialized){
-		if(debug){
-			cout << "launch() - WARNING: JDPlay has to be initialized before launching!" << endl;
-			fflush(stdout);
-		}
-		return false;
-	}
-
+	
 	HRESULT hr;
 
-	if(searchForSession && sessionFlags == DPOPEN_JOIN ){
+	if(sessionFlags == DPOPEN_JOIN ){
 		// join/host session ***************************************************************************
 		if(lpDP && sessionFlags == DPOPEN_JOIN){
 			if(debug){
-				cout << "launch() - searching for a session .";
+				cout << "search() - searching for a session .";
 				fflush(stdout);
 			}
 			
@@ -364,7 +356,7 @@ bool JDPlay::launch(bool searchForSession){
 				hr = lpDP->EnumSessions(&dpSessionDesc, 0, EnumSessionsCallback, NULL, 0);
 				if(hr != S_OK){
 					if(debug){
-						cout << endl << "launch() - ERROR[" << getDPERR(hr) << "]: failed to enumerate sessions" << endl;
+						cout << endl << "search() - ERROR[" << getDPERR(hr) << "]: failed to enumerate sessions" << endl;
 						fflush(stdout);
 					}
 					return false;
@@ -387,15 +379,20 @@ bool JDPlay::launch(bool searchForSession){
 
 			if(debug){
 				if(foundLobby){
-					cout << "launch() - session found" << endl;
+					cout << "search() - session found" << endl;
 					fflush(stdout);
 				}else{
-					cout << "launch() - search failed" << endl;
+					cout << "search() - search failed" << endl;
 					fflush(stdout);
 				}
 			}
 
 			if(!foundLobby){
+				if(debug){
+					cout << "-- search()" << endl;
+					fflush(stdout);
+				}
+
 				return false;
 			}
 
@@ -406,7 +403,7 @@ bool JDPlay::launch(bool searchForSession){
 			hr = lpDP->Open(&dpSessionDesc, sessionFlags | DPOPEN_RETURNSTATUS);
 			if(hr != S_OK){
 				if(debug){
-					cout << "launch() - ERROR[" << getDPERR(hr) << "]: failed to open DirectPlay session" << endl;
+					cout << "search() - ERROR[" << getDPERR(hr) << "]: failed to open DirectPlay session" << endl;
 					fflush(stdout);
 				}
 				return false;
@@ -419,23 +416,48 @@ bool JDPlay::launch(bool searchForSession){
 
 			if(hr != S_OK){
 				if(debug){
-					cout << "launch() - ERROR[" << getDPERR(hr) << "]: failed to create local player" << endl;
+					cout << "search() - ERROR[" << getDPERR(hr) << "]: failed to create local player" << endl;
 					fflush(stdout);
 				}
 				return false;
 			}
 
 			if(debug){
-				cout << "launch() - session opened and player initialized" << endl;
+				cout << "search() - session opened and player initialized" << endl;
 				fflush(stdout);
 			}
 		}
 	}else{
 		if(debug){
-			cout << "launch() - skipping session search" << endl;
+			cout << "search() - skipping session search, not needed" << endl;
 			fflush(stdout);
 		}
 	}
+
+	if(debug){
+		cout << "-- search()" << endl;
+		fflush(stdout);
+	}
+
+	return true;
+}
+
+bool JDPlay::launch(){
+
+	if(debug){
+		cout << "++ launch()" << endl;
+		fflush(stdout);
+	}
+
+	if(!isInitialized){
+		if(debug){
+			cout << "launch() - WARNING: JDPlay has to be initialized before launching!" << endl;
+			fflush(stdout);
+		}
+		return false;
+	}
+
+	HRESULT hr;
 
 	// release temporary directplay interface ***************************************************************
 	if(lpDP){

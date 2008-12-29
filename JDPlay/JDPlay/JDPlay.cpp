@@ -46,7 +46,7 @@ int doneCounter;
 // *** Method declarations ***
 void waitForCommand();
 void initialize(char* gameGUID, char* hostIP, bool isHost);
-void launch(bool doSearch);
+void launch();
 void printHelp();
 
 // *** Method implementations ***
@@ -222,31 +222,14 @@ void waitForCommand(){
 			fflush(stdout);
 			initialize(gameGUID, hostIP, isHost);
 		}else
-		if(!input.substr(0,7).compare("LAUNCH ") && input.find(" doSearch:") != string::npos){
+		if(!input.substr(0,7).compare("LAUNCH ")){
 			doneCounter = 0;
 			waitForDone = true;
 
 			//Launch game
-			string s_doSearch = input.substr(input.find(" doSearch:")+10);
-
-			bool doSearch;
-			if(!s_doSearch.compare("true")){
-				doSearch = true;
-			}else
-			if(!s_doSearch.compare("false")){
-				doSearch = false;
-			}else{
-				cout << "NAK" << endl;
-				if(debug){
-					cout << "doSearch: found \"" << s_doSearch << "\", but expected \"true\" or \"false\"" << endl;
-				}
-				fflush(stdout);
-				return;
-			}
-
 			cout << "ACK" << endl;
 			fflush(stdout);
-			launch(doSearch);
+			launch();
 		}else
 		if(!input.substr(0,7).compare("UPDATE ")){
 			doneCounter = 0;
@@ -300,14 +283,23 @@ void initialize(char* gameGUID, char* hostIP, bool isHost){
 	}
 }
 
-void launch(bool doSearch){
-	bool ret = jdplay->launch(doSearch);
+void launch(){
+	bool ret = jdplay->search();
 	if(!ret){
-		cout << "ERR" << endl;
+		cout << "NOTFOUND" << endl;
 		fflush(stdout);
 	}else{
-		cout << "FIN" << endl;
+		cout << "FOUND" << endl;
 		fflush(stdout);
+
+		ret = jdplay->launch();
+		if(!ret){
+			cout << "ERR" << endl;
+			fflush(stdout);
+		}else{
+			cout << "FIN" << endl;
+			fflush(stdout);
+		}
 	}
 }
 
@@ -338,11 +330,12 @@ void printHelp(){
 		 << endl
 		 << "  # a game is initialized properly, so lets launch it" << endl
 		 << "    OUT: RDY" << endl
-		 << "  # remote app wants to launch the game with searching for a session" << endl
-		 << "    IN:  LAUNCH doSearch:true" << endl
+		 << "  # remote app wants to launch the game" << endl
+		 << "    IN:  LAUNCH" << endl
 		 << "    IN:  DONE" << endl
-		 << "  # JDPlay understood the command and launches" << endl
+		 << "  # JDPlay understood the command, searches for a session and launches" << endl
 		 << "    OUT: ACK" << endl
+		 << "    OUT: FOUND # NOTFOUND if no Session was found, aborts launch" << endl
 		 << "  # game has been closed" << endl
 		 << "    OUT: FIN" << endl
 		 << "    OUT: RDY" << endl
