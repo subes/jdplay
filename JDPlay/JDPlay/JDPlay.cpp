@@ -326,10 +326,6 @@ void launch(){
 			fflush(stdout);
 			
 			found = jdplay->searchOnce();
-
-			if(found || _kbhit()){
-				break;
-			}
 		}
 
 		if(!found){
@@ -412,7 +408,7 @@ void printHelp(){
 		 << "Whitespace between parameters and the order of the parameters has to be correct. Here is a detailed list of available commands:" << endl
 		 << endl
 		 << "  INITIALIZE gameGUID:<e.g. {BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF}> hostIP:<e.g. 192.168.0.3> isHost:<true or false>" << endl
-		 << "  LAUNCH doSearch:<true or false>" << endl
+		 << "  LAUNCH" << endl
 		 << "  UPDATE playerName:<NAME>" << endl
 		 << endl
 		 << "Every command ends with and is recognized after an endline (\\n). Commands have to be written in UPPERCASE. "
