@@ -201,6 +201,12 @@ void waitForCommand(){
 	if(!input.compare("DONE") || input.length() < 1){
 		doneCounter++;
 	}else{
+		if(!input.compare("STILLALIVETEST")){
+			cout << "ACK" << endl;
+			fflush(stdout);
+			doneCounter = 0;
+			waitForDone = true;
+		}else
 		if(!input.substr(0,11).compare("INITIALIZE ") && input.find(" gameGUID:") != string::npos && input.find(" hostIP:") != string::npos && input.find(" isHost:") != string::npos){
 			doneCounter = 0;
 			waitForDone = true;
@@ -287,6 +293,8 @@ void waitForCommand(){
 			fflush(stdout);
 			jdplay->updatePlayerName(playerName);
 		}else{
+			cout << "NAK" << endl;
+			fflush(stdout);
 			doneCounter++;
 		}
 	}
@@ -394,11 +402,19 @@ void printHelp(){
 		 << "    OUT: ACK" << endl
 		 << "    OUT: RDY" << endl
 		 << endl
+		 << "  # use this to detect if the exe is still running" << endl
+		 << "    OUT: RDY" << endl
+		 << "    IN:  STILLALIVETEST" << endl
+		 << "    IN:  DONE" << endl
+		 << "    IN:  ACK" << endl
+		 << "    IN:  RDY" << endl
+		 << endl
 		 << "  # write DONE after each command you give, this is used as a workaround to shutdown, when JDPlay looses your process" << endl
 		 << endl
 		 << "  # this happens when gibberish is read" << endl
 		 << "    OUT: RDY" << endl
 		 << "    IN:  jsdakfsdfkh" << endl
+		 << "    IN:  NAK" << endl
 		 << "    OUT: RDY" << endl
 		 << endl
 		 << "  # this indicates an error and may be printed instead of FIN" << endl
