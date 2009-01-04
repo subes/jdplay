@@ -557,7 +557,7 @@ void JDPlay::updateFoundSessionDescription(LPCDPSESSIONDESC2 lpFoundSD){
 	}
 
 	if(debug){
-		cout << "updateFoundSessionDescription() - curSession = " << dpSessionDesc.lpszSessionNameA << "  validateCount = " << validateCount << ", foundLobby = " << foundLobby << endl;
+		cout << "updateFoundSessionDescription() - curSessionName = \"" << dpSessionDesc.lpszSessionNameA << "\"  validateCount = " << validateCount << ", foundLobby = " << foundLobby << endl;
 		cout << "-- updateFoundSessionDescription()" << endl;
 		fflush(stdout);
 	}

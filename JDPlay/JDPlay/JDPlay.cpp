@@ -328,7 +328,7 @@ void launch(){
 
 	if(!jdplay->isHost()){
 		bool found = false;
-		for(int i = 1; i <= maxSearchRetries; i++){
+		for(int i = 1; i <= maxSearchRetries && !found; i++){
 			
 			cout << "SEARCHTRY " << i << "/" << maxSearchRetries << endl;
 			fflush(stdout);
