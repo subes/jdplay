@@ -40,14 +40,14 @@ using namespace std;
 JDPlay* jdplay;
 bool debug;
 
-//used to realize if father process dies -> detectable if we get sent "DONE" endlessly
-int doneCounter;
+int doneCounter; //used to realize if father process dies -> detectable if we get sent "DONE" endlessly
 int maxSearchRetries;
+bool sessionFound = false;
 
 // *** Method declarations ***
 void waitForCommand();
 void initialize(char* gameGUID, char* hostIP, bool isHost);
-void launch();
+void launch(bool doSearch);
 void printHelp();
 
 // *** Method implementations ***
@@ -261,14 +261,32 @@ void waitForCommand(){
 			fflush(stdout);
 			initialize(gameGUID, hostIP, isHost);
 		}else
-		if(!input.substr(0,6).compare("LAUNCH")){
+		if(!input.substr(0,7).compare("LAUNCH ") && input.find(" doSearch:") != string::npos){
 			doneCounter = 0;
 			waitForDone = true;
 
 			//Launch game
+			string s_doSearch = input.substr(input.find(" doSearch:")+10);
+
+			bool doSearch;
+			if(!s_doSearch.compare("true")){
+				doSearch = true;
+			}else
+			if(!s_doSearch.compare("false")){
+				doSearch = false;
+			}else{
+				cout << "NAK" << endl;
+				if(debug){
+					cout << "doSearch: found \"" << s_doSearch << "\", but expected \"true\" or \"false\"" << endl;
+				}
+				fflush(stdout);
+				return;
+			}
+
+			//Launch game
 			cout << "ACK" << endl;
 			fflush(stdout);
-			launch();
+			launch(doSearch);
 		}else
 		if(!input.substr(0,7).compare("UPDATE ")){
 			doneCounter = 0;
@@ -315,6 +333,7 @@ void waitForCommand(){
 
 void initialize(char* gameGUID, char* hostIP, bool isHost){
 	bool ret = jdplay->initialize(gameGUID, hostIP, isHost);
+	sessionFound = false;
 	if(!ret){
 		cout << "ERR" << endl;
 		fflush(stdout);
@@ -324,19 +343,18 @@ void initialize(char* gameGUID, char* hostIP, bool isHost){
 	}
 }
 
-void launch(){
+void launch(bool doSearch){
 
-	if(!jdplay->isHost()){
-		bool found = false;
-		for(int i = 1; i <= maxSearchRetries && !found; i++){
+	if(doSearch && !jdplay->isHost() && !sessionFound){
+		for(int i = 1; i <= maxSearchRetries && !sessionFound; i++){
 			
 			cout << "SEARCHTRY " << i << "/" << maxSearchRetries << endl;
 			fflush(stdout);
 			
-			found = jdplay->searchOnce();
+			sessionFound = jdplay->searchOnce();
 		}
 
-		if(!found){
+		if(!sessionFound){
 			cout << "NOTFOUND" << endl;
 			fflush(stdout);
 			return;
@@ -385,7 +403,7 @@ void printHelp(){
 		 << "  # a game is initialized properly, so lets launch it" << endl
 		 << "    OUT: RDY" << endl
 		 << "  # remote app wants to launch the game" << endl
-		 << "    IN:  LAUNCH" << endl
+		 << "    IN:  LAUNCH doSearch:true" << endl
 		 << "    IN:  DONE" << endl
 		 << "  # JDPlay understood the command, searches for a session and launches" << endl
 		 << "    OUT: ACK" << endl
