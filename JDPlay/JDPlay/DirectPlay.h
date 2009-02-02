@@ -61,9 +61,9 @@ class JDPlay{
 		~JDPlay();
 
 		void updatePlayerName(char* playerName);
-		bool initialize(char* gameGUID, char* hostIP, bool isHost);
+		bool initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayers);
 		bool searchOnce();
-		bool launch();
+		bool launch(bool startGame);
 		bool isHost();
 		
 		void updateFoundSessionDescription(LPCDPSESSIONDESC2 lpFoundSD); //has to be public for the callback function

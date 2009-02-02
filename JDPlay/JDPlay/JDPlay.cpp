@@ -46,8 +46,8 @@ bool sessionFound = false;
 
 // *** Method declarations ***
 void waitForCommand();
-void initialize(char* gameGUID, char* hostIP, bool isHost);
-void launch(bool doSearch);
+void initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayers);
+void launch(bool doSearch, bool startGame);
 void printHelp();
 
 // *** Method implementations ***
@@ -207,16 +207,17 @@ void waitForCommand(){
 			doneCounter = 0;
 			waitForDone = true;
 		}else
-		if(!input.substr(0,11).compare("INITIALIZE ") && input.find(" gameGUID:") != string::npos && input.find(" hostIP:") != string::npos && input.find(" isHost:") != string::npos){
+		if(!input.substr(0,11).compare("INITIALIZE ") && input.find(" gameGUID:") != string::npos && input.find(" hostIP:") != string::npos && input.find(" isHost:") != string::npos && input.find(" maxPlayers:") != string::npos){
 			doneCounter = 0;
 			waitForDone = true;
 
 			//Initialize
 			
-			//INITIALIZE gameGUID:<e.g. {BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF}> hostIP:<e.g. 192.168.0.3> isHost:<true or false> 
+			//INITIALIZE gameGUID:<e.g. {BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF}> hostIP:<e.g. 192.168.0.3> isHost:<true or false> maxPlayers:<true or false>
 			string s_gameGUID = input.substr(input.find(" gameGUID:")+10, input.find(" hostIP:")-input.find(" gameGUID:")-10);
 			string s_hostIP = input.substr(input.find(" hostIP:")+8, input.find(" isHost:")-input.find(" hostIP:")-8);
-			string s_isHost = input.substr(input.find(" isHost:")+8);
+			string s_isHost = input.substr(input.find(" isHost:")+8, input.find(" maxPlayers:")-input.find(" isHost:")-8);
+			string s_maxPlayers = input.substr(input.find(" maxPlayers:")+12);
 
 			if(s_gameGUID.length() != 38){
 				cout << "NAK" << endl;
@@ -252,21 +253,27 @@ void waitForCommand(){
 			}
 
 			char gameGUID[39];
-			char hostIP[256]; //could also be a domain name
 			strcpy(gameGUID, s_gameGUID.c_str());
-			
+
+			char hostIP[256]; //could also be a domain name
 			strcpy(hostIP, s_hostIP.c_str());
+
+			int maxPlayers;
+			istringstream isst;
+			isst.str(s_maxPlayers);
+			isst >> maxPlayers;
 			
 			cout << "ACK" << endl;
 			fflush(stdout);
-			initialize(gameGUID, hostIP, isHost);
+			initialize(gameGUID, hostIP, isHost, maxPlayers);
 		}else
-		if(!input.substr(0,7).compare("LAUNCH ") && input.find(" doSearch:") != string::npos){
+		if(!input.substr(0,7).compare("LAUNCH ") && input.find(" doSearch:") != string::npos && input.find(" startGame:") != string::npos){
 			doneCounter = 0;
 			waitForDone = true;
 
 			//Launch game
-			string s_doSearch = input.substr(input.find(" doSearch:")+10);
+			string s_doSearch = input.substr(input.find(" doSearch:")+10,input.find(" startGame:")-input.find(" doSearch:")-10);
+			string s_startGame = input.substr(input.find(" startGame:")+11);
 
 			bool doSearch;
 			if(!s_doSearch.compare("true")){
@@ -283,10 +290,25 @@ void waitForCommand(){
 				return;
 			}
 
+			bool startGame;
+			if(!s_startGame.compare("true")){
+				startGame = true;
+			}else
+			if(!s_startGame.compare("false")){
+				startGame = false;
+			}else{
+				cout << "NAK" << endl;
+				if(debug){
+					cout << "startGame: found \"" << s_startGame << "\", but expected \"true\" or \"false\"" << endl;
+				}
+				fflush(stdout);
+				return;
+			}
+
 			//Launch game
 			cout << "ACK" << endl;
 			fflush(stdout);
-			launch(doSearch);
+			launch(doSearch, startGame);
 		}else
 		if(!input.substr(0,7).compare("UPDATE ")){
 			doneCounter = 0;
@@ -331,8 +353,8 @@ void waitForCommand(){
 	}
 }
 
-void initialize(char* gameGUID, char* hostIP, bool isHost){
-	bool ret = jdplay->initialize(gameGUID, hostIP, isHost);
+void initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayers){
+	bool ret = jdplay->initialize(gameGUID, hostIP, isHost, maxPlayers);
 	sessionFound = false;
 	if(!ret){
 		cout << "ERR" << endl;
@@ -343,7 +365,7 @@ void initialize(char* gameGUID, char* hostIP, bool isHost){
 	}
 }
 
-void launch(bool doSearch){
+void launch(bool doSearch, bool startGame){
 
 	if(doSearch && !jdplay->isHost() && !sessionFound){
 		for(int i = 1; i <= maxSearchRetries && !sessionFound; i++){
@@ -364,7 +386,7 @@ void launch(bool doSearch){
 		}
 	}
 	
-	int ret = jdplay->launch();
+	int ret = jdplay->launch(startGame);
 	if(!ret){
 		cout << "ERR" << endl;
 		fflush(stdout);
@@ -391,7 +413,7 @@ void printHelp(){
 		 << "  # JDPlay is started and waits for the first command" << endl
 		 << "    OUT: RDY" << endl
 		 << "  # remote app wants to initialize a game" << endl
-		 << "    IN:  INITIALIZE gameGUID:{BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF} hostIP:192.168.2.101 isHost:false" << endl
+		 << "    IN:  INITIALIZE gameGUID:{BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF} hostIP:192.168.2.101 isHost:false maxPlayers:2" << endl
 		 << "    IN:  DONE" << endl
 		 << "  # JDPlay understood the command and launches" << endl
 		 << "    OUT: ACK" << endl
@@ -403,7 +425,7 @@ void printHelp(){
 		 << "  # a game is initialized properly, so lets launch it" << endl
 		 << "    OUT: RDY" << endl
 		 << "  # remote app wants to launch the game" << endl
-		 << "    IN:  LAUNCH doSearch:true" << endl
+		 << "    IN:  LAUNCH doSearch:true startGame:true" << endl
 		 << "    IN:  DONE" << endl
 		 << "  # JDPlay understood the command, searches for a session and launches" << endl
 		 << "    OUT: ACK" << endl
@@ -441,8 +463,8 @@ void printHelp(){
 		 << "Parameters are always mandatory, though when a game is initialized as host, the doSearch parameters value to LAUNCH gets ignored."
 		 << "Whitespace between parameters and the order of the parameters has to be correct. Here is a detailed list of available commands:" << endl
 		 << endl
-		 << "  INITIALIZE gameGUID:<e.g. {BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF}> hostIP:<e.g. 192.168.0.3> isHost:<true or false>" << endl
-		 << "  LAUNCH" << endl
+		 << "  INITIALIZE gameGUID:<e.g. {BC3A2ACD-FB46-4c6b-8B5C-CD193C9805CF}> hostIP:<e.g. 192.168.0.3> isHost:<true or false> maxPlayers:<int> #maxPlayers:0 means unlimited" << endl
+		 << "  LAUNCH doSearch:<bool> startGame:<bool> #if startGame is false, launching the game will be skipped" << endl
 		 << "  UPDATE playerName:<NAME>" << endl
 		 << endl
 		 << "Every command ends with and is recognized after an endline (\\n). Commands have to be written in UPPERCASE. "

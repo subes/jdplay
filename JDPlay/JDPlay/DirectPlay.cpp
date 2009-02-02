@@ -90,7 +90,7 @@ JDPlay::~JDPlay(){
 	}
 }
 
-bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost){
+bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayers){
 
 	if(debug){
 		cout << "++ initialize(" << gameGUID << ", " << hostIP << ", " << isHost << ")" << endl;
@@ -251,16 +251,16 @@ bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost){
 		fflush(stdout);
 	}
 
-	// populate session description ****************************************************************** 
+	// populate session description ******************************************************************
 	dpSessionDesc.dwSize = sizeof(DPSESSIONDESC2);
 	dpSessionDesc.dwFlags = 0;									// optional: DPSESSION_MIGRATEHOST
 	dpSessionDesc.guidApplication = gameID;						// Game GUID
 	dpSessionDesc.guidInstance = gameID;						// ID for the session instance
-	dpSessionDesc.lpszSessionName = A2W("Coopnet Session");						// name of the session
-	dpSessionDesc.lpszSessionNameA = "Coopnet Session";						// ANSI name of the session
-	dpSessionDesc.dwMaxPlayers = 0;								// Maximum # players allowed in session
+	dpSessionDesc.lpszSessionName = A2W("Coopnet Session");		// name of the session
+	dpSessionDesc.lpszSessionNameA = "Coopnet Session";			// ANSI name of the session
+	dpSessionDesc.dwMaxPlayers = maxPlayers;					// Maximum # players allowed in session
 	dpSessionDesc.dwCurrentPlayers = 0;							// Current # players in session (read only)
-	dpSessionDesc.lpszPassword = A2W("\0");							// ANSI password of the session (optional)
+	dpSessionDesc.lpszPassword = A2W("\0");						// ANSI password of the session (optional)
 	dpSessionDesc.lpszPasswordA = "\0";							// ANSI password of the session (optional)
 	dpSessionDesc.dwReserved1 = 0;								// Reserved for future M$ use.
 	dpSessionDesc.dwReserved2 = 0;
@@ -411,7 +411,7 @@ bool JDPlay::searchOnce(){
 	return true;
 }
 
-bool JDPlay::launch(){
+bool JDPlay::launch(bool startGame){
 
 	if(debug){
 		cout << "++ launch()" << endl;
@@ -459,42 +459,53 @@ bool JDPlay::launch(){
 		}
 	}
 
-	// launch game *********************************************************************************
-	hr = lpDPLobby->RunApplication( 0, &appID, &dpConn, 0);
-	
-	if(hr != S_OK){
+	if(startGame){
+		// launch game *********************************************************************************
+		hr = lpDPLobby->RunApplication( 0, &appID, &dpConn, 0);
+		
+		if(hr != S_OK){
+			if(debug){
+				cout << "launch() - ERROR[" << getDPERR(hr) << "]: failed to launch the game, maybe it's not installed properly" << endl;
+				fflush(stdout);
+			}
+			return false;
+		}
+
 		if(debug){
-			cout << "launch() - ERROR[" << getDPERR(hr) << "]: failed to launch the game, maybe it's not installed properly" << endl;
+			cout << "launch() - game started, ProcessID = " << appID << endl;
 			fflush(stdout);
 		}
-		return false;
+
+		// wait until game exits ***********************************************************************
+		HANDLE appHandle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, appID);
+		if(appHandle == NULL){
+			if(debug){
+				cout << "launch() - ERROR: failed to open game process" << endl;
+				fflush(stdout);
+			}
+			return false;
+		}
+
+		DWORD exitCode = NULL;
+		while(GetExitCodeProcess(appHandle, &exitCode)){   // process is running
+			if(exitCode != STILL_ACTIVE){
+				break;
+			}
+			Sleep(1000);		
+		}
+
+		if(debug){
+			cout << "launch() - game closed" << endl;
+			fflush(stdout);
+		}
+	}else{
+		if(debug){
+			cout << "launch() - skipping game start" << endl;
+			fflush(stdout);
+		}
 	}
 
 	if(debug){
-		cout << "launch() - game started, ProcessID = " << appID << endl;
-		fflush(stdout);
-	}
-
-	// wait until game exits ***********************************************************************
-	HANDLE appHandle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, appID);
-	if(appHandle == NULL){
-		if(debug){
-			cout << "launch() - ERROR: failed to open game process" << endl;
-			fflush(stdout);
-		}
-		return false;
-	}
-
-	DWORD exitCode = NULL;
-	while(GetExitCodeProcess(appHandle, &exitCode)){   // process is running
-		if(exitCode != STILL_ACTIVE){
-			break;
-		}
-		Sleep(1000);		
-	}
-
-	if(debug){
-		cout << "launch() - game closed" << endl;
 		cout << "-- launch()" << endl;
 		fflush(stdout);
 	}
