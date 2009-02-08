@@ -256,12 +256,12 @@ bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayer
 	dpSessionDesc.dwFlags = 0;									// optional: DPSESSION_MIGRATEHOST
 	dpSessionDesc.guidApplication = gameID;						// Game GUID
 	dpSessionDesc.guidInstance = gameID;						// ID for the session instance
-	dpSessionDesc.lpszSessionName = A2W("Coopnet Session");		// name of the session
+	dpSessionDesc.lpszSessionName = L"Coopnet Session";		// name of the session
 	dpSessionDesc.lpszSessionNameA = "Coopnet Session";			// ANSI name of the session
 	dpSessionDesc.dwMaxPlayers = maxPlayers;					// Maximum # players allowed in session
 	dpSessionDesc.dwCurrentPlayers = 0;							// Current # players in session (read only)
-	dpSessionDesc.lpszPassword = A2W("\0");						// ANSI password of the session (optional)
-	dpSessionDesc.lpszPasswordA = "\0";							// ANSI password of the session (optional)
+	dpSessionDesc.lpszPassword = NULL;						// ANSI password of the session (optional)
+	dpSessionDesc.lpszPasswordA = NULL;							// ANSI password of the session (optional)
 	dpSessionDesc.dwReserved1 = 0;								// Reserved for future M$ use.
 	dpSessionDesc.dwReserved2 = 0;
 	dpSessionDesc.dwUser1 = 0;									// For use by the application
