@@ -207,8 +207,10 @@ bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayer
 	address[0].lpData       = (LPVOID)&DPSPGUID_TCPIP;  // TCP ID
 
 	address[1].guidDataType = DPAID_INet;
-	address[1].dwDataSize   = strlen(hostIP)+1;
-	address[1].lpData       = hostIP;
+	if(!isHost){
+		address[1].dwDataSize   = static_cast<DWORD>(strlen(hostIP)+1);
+		address[1].lpData       = hostIP;
+	}
 
 	// get size to create address
 	// this method will return DPERR_BUFFERTOOSMALL, that is not an error
@@ -260,8 +262,8 @@ bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayer
 	dpSessionDesc.lpszSessionNameA = "Coopnet Session";			// ANSI name of the session
 	dpSessionDesc.dwMaxPlayers = maxPlayers;					// Maximum # players allowed in session
 	dpSessionDesc.dwCurrentPlayers = 0;							// Current # players in session (read only)
-	dpSessionDesc.lpszPassword = 0;						// ANSI password of the session (optional)
-	dpSessionDesc.lpszPasswordA = 0;							// ANSI password of the session (optional)
+	dpSessionDesc.lpszPassword = L"\0";						// ANSI password of the session (optional)
+	dpSessionDesc.lpszPasswordA = "\0";							// ANSI password of the session (optional)
 	dpSessionDesc.dwReserved1 = 0;								// Reserved for future M$ use.
 	dpSessionDesc.dwReserved2 = 0;
 	dpSessionDesc.dwUser1 = 0;									// For use by the application

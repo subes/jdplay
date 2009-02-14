@@ -194,7 +194,7 @@ void waitForCommand(){
 
 	//Read the command
 	static char in[MAX_PATH]; //should be enough
-	gets(in);
+	gets_s<MAX_PATH>(in);
 
 	string input(in);
 
@@ -253,10 +253,10 @@ void waitForCommand(){
 			}
 
 			char gameGUID[39];
-			strcpy(gameGUID, s_gameGUID.c_str());
+			strcpy_s<39>(gameGUID, s_gameGUID.c_str());
 
 			char hostIP[256]; //could also be a domain name
-			strcpy(hostIP, s_hostIP.c_str());
+			strcpy_s<256>(hostIP, s_hostIP.c_str());
 
 			int maxPlayers;
 			istringstream isst;
@@ -327,7 +327,7 @@ void waitForCommand(){
 				return;
 			}
 			
-			strcpy(playerName, s_playerName.c_str());
+			strcpy_s<256>(playerName, s_playerName.c_str());
 			
 			cout << "ACK" << endl;
 			fflush(stdout);
@@ -345,7 +345,7 @@ void waitForCommand(){
 
 	if(waitForDone){
 		//Read DONE
-		gets(in);
+		gets_s<MAX_PATH>(in);
 		if(strcmp(in, "DONE")){
 			cout << "You have to end each command conversation with DONE!" << endl;
 			fflush(stdout);
