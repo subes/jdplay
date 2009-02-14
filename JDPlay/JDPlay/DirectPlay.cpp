@@ -206,11 +206,13 @@ bool JDPlay::initialize(char* gameGUID, char* hostIP, bool isHost, int maxPlayer
 	address[0].dwDataSize   = sizeof(GUID);
 	address[0].lpData       = (LPVOID)&DPSPGUID_TCPIP;  // TCP ID
 
-	address[1].guidDataType = DPAID_INet;
-	if(!isHost){
-		address[1].dwDataSize   = static_cast<DWORD>(strlen(hostIP)+1);
-		address[1].lpData       = hostIP;
+	if(isHost){ //Bind to any ip?
+		hostIP = "";
 	}
+
+	address[1].guidDataType = DPAID_INet;
+	address[1].dwDataSize   = static_cast<DWORD>(strlen(hostIP)+1);
+	address[1].lpData       = hostIP;
 
 	// get size to create address
 	// this method will return DPERR_BUFFERTOOSMALL, that is not an error
